@@ -1,0 +1,44 @@
+{
+  "name": "range-slider-integer",
+  "version": "0.0.1",
+  "description": "",
+  "homepage": "https://github.com/nna0921/range-slider-integer#readme",
+  "bugs": {
+    "url": "https://github.com/nna0921/range-slider-integer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nna0921/range-slider-integer.git"
+  },
+  "license": "MIT",
+  "author": "wizardamigos",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "budo demo/demo.js:bundle.js --live --open --dir . --serve bundle.js --index index.html",
+    "build": "browserify demo/demo.js > bundle.js",
+    "lint": "standardx",
+    "lint:fix": "standardx --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "standardx": {
+    "env": [
+      "browser"
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest"
+    },
+    "rules": {
+      "camelcase": "off"
+    }
+  },
+  "devDependencies": {
+    "browserify": "^17.0.1",
+    "budo": "^11.8.4",
+    "standardx": "^7.0.0"
+  },
+  "dependencies": {
+    "input-integer-ui-anna": "^0.0.6",
+    "range-slider-anna": "^0.0.2"
+  }
+}
