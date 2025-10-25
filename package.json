@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
-    "start": "budo demo/demo.js:bundle.js --live --open --dir . --serve bundle.js --index index.html",
+    "start": "budo demo/demo.js:bundle.js --live --open",
     "build": "browserify demo/demo.js > bundle.js",
     "lint": "standardx",
     "lint:fix": "standardx --fix",
@@ -38,7 +38,7 @@
     "standardx": "^7.0.0"
   },
   "dependencies": {
-    "input-integer-ui-anna": "^0.0.6",
-    "range-slider-anna": "^0.0.2"
+    "input-integer-ui-anna": "^0.0.7",
+    "range-slider-anna": "^0.0.3"
   }
 }

@@ -7,37 +7,128 @@ const rsi=rangeSliderInteger(opts)
 document.body.append(rsi)
 
 
-},{"..":2}],2:[function(require,module,exports){
-const range =require('range-slider-anna')
-const integer =require('input-integer-ui-anna')
+},{"..":4}],2:[function(require,module,exports){
+module.exports = inputInteger
 
-module.exports =rangeSliderInteger
-
-function rangeSliderInteger (opts)
+const sheet = new CSSStyleSheet()
+const theme=get_theme()
+sheet.replaceSync(theme)
+var id=0
+function inputInteger (opts, protocol)
 {
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({mode: 'closed'})
+    const {min = 0,max = 1000} = opts
+    const name = `input-integer-${id++}`
+    
+    const notify = protocol({from: name},listen)
+     function listen(message)
+    {
+        const {type,data}=message
+        if(type === "update")
+        {
+            input.value=data
+        }
 
-    const rangeSlider = range(opts,listen)
-    const inputInteger = integer(opts, listen)
-
-    const output = document.createElement('div')
-    output.innerText=0
-
-    shadow.append(rangeSlider, inputInteger, output)
-    return el
-    function listen(message){
-        const {type, body} = message 
-        if (type==='update') output.innerText = body
     }
 
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
+    const input= document.createElement('input')
+    input.type='number'
+    input.min=min //or u could write opts.min
+    input.max=max
+    input.onkeyup = (e) => handle_onkeyup(e, input, min, max)
+    input.onmouseleave = (e) =>  handle_onmouseleave_and_blur(e, input, min)
+    input.onblur = (e) =>  handle_onmouseleave_and_blur(e, input, min)
+    shadow.append(input)
+   
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+    //handlers
+    function handle_onkeyup(e, input, min, max)
+    {
+        const val= Number(e.target.value)
+        const val_len=val.toString().length
+        const min_len=min.toString().length
+        if(val>max)input.value=max
+        else if (val_len ==min_len && val<min) input.value=min
+        
+        notify({from:name ,type:'update',data:val})
+    }
+
+    function handle_onmouseleave_and_blur(e, input, min)
+    {
+        const val= Number(e.target.value)
+        if(val<min)input.value=''
+    }
 }
-},{"input-integer-ui-anna":4,"range-slider-anna":3}],3:[function(require,module,exports){
+
+function get_theme()
+{
+  return `
+        :host {
+            --b: 9, 0%;
+            --color-white: var(--b), 100%;
+            --color-black: var(--b), 4%;
+            --color-grey: var(--b), 85%;
+            --bg-color: var(--color-grey);
+            --shadow-xy: 0 8px;
+            --shadow-blur: 8px;
+            --shadow-color: var(--color-black);
+            --shadow-opacity: 0;
+            --shadow-opacity-focus: 0.65;
+        }
+
+        input {
+            text-align: left;
+            font-size: 1.4rem;
+            font-weight: 200;
+            color: hsla(var(--color-black), 1);
+            background-color: hsla(var(--bg-color), 1);
+            padding: 8px 12px;
+            box-shadow: var(--shadow-xy) var(--shadow-blur) hsla(var(--shadow-color), var(--shadow-opacity));
+            transition: font-size .3s, color .3s, background-color .3s, box-shadow .3s ease-in-out;
+            outline: none;
+            border: 1px solid hsla(var(--bg-color), 1);
+            border-radius: 8px;
+            width: 100px;
+        }
+
+        input:focus {
+            --shadow-color: var(--color-black);
+            --shadow-opacity: var(--shadow-opacity-focus);
+            --shadow-xy: 4px 4px;
+            box-shadow: var(--shadow-xy) var(--shadow-blur) hsla(var(--shadow-color), var(--shadow-opacity));
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+    `
+}
+
+},{}],3:[function(require,module,exports){
 module.exports = rangeSlider
 
-function rangeSlider(opts, notify){
-    
+var id=0;
+
+function rangeSlider(opts, protocol){
+   
     const { min=0, max=1000 }=opts
+    const name = `range-${id++}`
+
+    const notify =protocol({from: name},listen) //notify parent
+    function listen(message)
+    {
+        const {type,data}=message
+        if(type === "update")
+        {
+            input.value=data
+            fill.style.width = `${data/max*100}%`
+            input.focus()
+        }
+
+    }
     const el=document.createElement('div')
     el.classList.add('container')
 
@@ -66,7 +157,7 @@ function rangeSlider(opts, notify){
         const val= Number(e.target.value)
         console.log(val);
         fill.style.width = `${val/max*100}%`
-        notify({type:'update',body:val})
+        notify({from:name,type:'update',data:val})
     }
 }
 
@@ -156,92 +247,63 @@ function get_theme()
 }
 
 },{}],4:[function(require,module,exports){
-module.exports = inputInteger
+const range =require('range-slider-anna')
+const integer =require('input-integer-ui-anna')
 
-const sheet = new CSSStyleSheet()
-const theme=get_theme()
-sheet.replaceSync(theme)
+module.exports =rangeSliderInteger
 
-function inputInteger (opts, notify)
+function rangeSliderInteger (opts)
 {
-    const {min = 0,max = 1000} = opts
-    const el= document.createElement('div')
+    const state = {}
+    const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
-    const input= document.createElement('input')
-    input.type='number'
-    input.min=min //or u could write opts.min
-    input.max=max
-    input.onkeyup = (e) => handle_onkeyup(e, input, min, max)
-    input.onmouseleave = (e) =>  handle_onmouseleave_and_blur(e, input, min)
-    input.onblur = (e) =>  handle_onmouseleave_and_blur(e, input, min)
-    shadow.append(input)
-   
-    shadow.adoptedStyleSheets = [sheet]
+
+    const rsi = document.createElement('div')
+    rsi.classList.add('rsi')
+    
+    const rangeSlider = range(opts, protocol)
+    const inputInteger = integer(opts, protocol)
+
+    rsi.append(rangeSlider, inputInteger)
+
+    const style = document.createElement('style')
+    style.textContent=get_theme()
+
+    
+
+    shadow.append(rsi, style)
     return el
-    //handlers
-    function handle_onkeyup(e, input, min, max)
+    function protocol(message, notify) //notify subcomponent
     {
-        const val= Number(e.target.value)
-        const val_len=val.toString().length
-        const min_len=min.toString().length
-        if(val>max)input.value=max
-        else if (val_len ==min_len && val<min) input.value=''
-        
-        notify({type:'update',body:val})
+        const {from} = message
+        state[from]={value:0, notify}
+        return listen
+    }
+    function listen(message){
+        const {from, type, data} = message 
+        state[from].value=data
+        if (type==='update') {
+            var notify 
+            if(from=== 'range-0') notify=state['input-integer-0'].notify
+            else if (from === 'input-integer-0')  notify=state['range-0'].notify
+            notify({type,data})
+        }
+
+    }
+    function get_theme()
+    {
+        return `
+         .rsi{
+          display:grid;
+          grid-template-columns: 8fr 1fr;
+          align-items:center;
+          justify-items:center;
+          padding: 5%;
+
+
+         }
+        `
     }
 
-    function handle_onmouseleave_and_blur(e, input, min)
-    {
-        const val= Number(e.target.value)
-        if(val<min)input.value=''
-    }
 }
-
-function get_theme()
-{
-  return `
-        :host {
-            --b: 9, 0%;
-            --color-white: var(--b), 100%;
-            --color-black: var(--b), 4%;
-            --color-grey: var(--b), 85%;
-            --bg-color: var(--color-grey);
-            --shadow-xy: 0 8px;
-            --shadow-blur: 8px;
-            --shadow-color: var(--color-black);
-            --shadow-opacity: 0;
-            --shadow-opacity-focus: 0.65;
-        }
-
-        input {
-            text-align: left;
-            font-size: 1.4rem;
-            font-weight: 200;
-            color: hsla(var(--color-black), 1);
-            background-color: hsla(var(--bg-color), 1);
-            padding: 8px 12px;
-            box-shadow: var(--shadow-xy) var(--shadow-blur) hsla(var(--shadow-color), var(--shadow-opacity));
-            transition: font-size .3s, color .3s, background-color .3s, box-shadow .3s ease-in-out;
-            outline: none;
-            border: 1px solid hsla(var(--bg-color), 1);
-            border-radius: 8px;
-            width: 100px;
-        }
-
-        input:focus {
-            --shadow-color: var(--color-black);
-            --shadow-opacity: var(--shadow-opacity-focus);
-            --shadow-xy: 4px 4px;
-            box-shadow: var(--shadow-xy) var(--shadow-blur) hsla(var(--shadow-color), var(--shadow-opacity));
-        }
-
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-        }
-    `
-}
-
-
-
-},{}]},{},[1]);
+},{"input-integer-ui-anna":2,"range-slider-anna":3}]},{},[1]);
