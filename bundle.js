@@ -1,11 +1,10 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-const rangeSliderInteger=require('..')
+const rangeSliderInteger = require('..')
 
-const opts ={min:0,max:10}
-const rsi=rangeSliderInteger(opts)
+const opts = { min: 0, max: 10 }
+const rsi = rangeSliderInteger(opts)
 
 document.body.append(rsi)
-
 
 },{"..":4}],2:[function(require,module,exports){
 module.exports = inputInteger
@@ -247,52 +246,46 @@ function get_theme()
 }
 
 },{}],4:[function(require,module,exports){
-const range =require('range-slider-anna')
-const integer =require('input-integer-ui-anna')
+const range = require('range-slider-anna')
+const integer = require('input-integer-ui-anna')
 
-module.exports =rangeSliderInteger
+module.exports = rangeSliderInteger
 
-function rangeSliderInteger (opts)
-{
-    const state = {}
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({mode: 'closed'})
+function rangeSliderInteger (opts) {
+  const state = {}
+  const el = document.createElement('div')
+  const shadow = el.attachShadow({ mode: 'closed' })
 
-    const rsi = document.createElement('div')
-    rsi.classList.add('rsi')
-    
-    const rangeSlider = range(opts, protocol)
-    const inputInteger = integer(opts, protocol)
+  const rsi = document.createElement('div')
+  rsi.classList.add('rsi')
 
-    rsi.append(rangeSlider, inputInteger)
+  const rangeSlider = range(opts, protocol)
+  const inputInteger = integer(opts, protocol)
 
-    const style = document.createElement('style')
-    style.textContent=get_theme()
+  rsi.append(rangeSlider, inputInteger)
 
-    
+  const style = document.createElement('style')
+  style.textContent = getTheme()
 
-    shadow.append(rsi, style)
-    return el
-    function protocol(message, notify) //notify subcomponent
-    {
-        const {from} = message
-        state[from]={value:0, notify}
-        return listen
+  shadow.append(rsi, style)
+  return el
+  function protocol (message, notify) { // notify subcomponent
+    const { from } = message
+    state[from] = { value: 0, notify }
+    return listen
+  }
+  function listen (message) {
+    const { from, type, data } = message
+    state[from].value = data
+    if (type === 'update') {
+      let notify
+      if (from === 'range-0') notify = state['input-integer-0'].notify
+      else if (from === 'input-integer-0') notify = state['range-0'].notify
+      notify({ type, data })
     }
-    function listen(message){
-        const {from, type, data} = message 
-        state[from].value=data
-        if (type==='update') {
-            var notify 
-            if(from=== 'range-0') notify=state['input-integer-0'].notify
-            else if (from === 'input-integer-0')  notify=state['range-0'].notify
-            notify({type,data})
-        }
-
-    }
-    function get_theme()
-    {
-        return `
+  }
+  function getTheme () {
+    return `
          .rsi{
           display:grid;
           grid-template-columns: 8fr 1fr;
@@ -303,7 +296,7 @@ function rangeSliderInteger (opts)
 
          }
         `
-    }
-
+  }
 }
+
 },{"input-integer-ui-anna":2,"range-slider-anna":3}]},{},[1]);
