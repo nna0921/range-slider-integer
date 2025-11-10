@@ -15,8 +15,8 @@
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
-    "start": "budo demo/demo.js:bundle.js --live --open",
-    "build": "browserify demo/demo.js > bundle.js",
+    "build": "browserify -i STATE demo/demo.js -o bundle.js",
+    "serve": "npm run build && npx http-server -p 8080 -o",
     "lint": "standardx src demo",
     "lint:fix": "standardx --fix src demo",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -38,6 +38,7 @@
     "standardx": "^7.0.0"
   },
   "dependencies": {
+    "datashell": "^0.0.1-pre-alpha",
     "input-integer-ui-anna": "^0.0.7",
     "range-slider-anna": "^0.0.3"
   }
