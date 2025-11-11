@@ -1,34 +1,26 @@
-let STATE
-if (typeof window === 'undefined') {
-  STATE = require('STATE')
-} else {
-  STATE = window.STATE || require('STATE')
-}
+const STATE = require('STATE')
 
-const statedbRoot = STATE()
-
-if (typeof statedbRoot.admin === 'function') {
-  const adminApi = statedbRoot.admin()
-  if (adminApi && typeof adminApi.add_admins === 'function') {
-    adminApi.add_admins([__filename])
-  }
-}
+const statedbFile = STATE(__filename)
+const { sdb } = statedbFile(defaults)
 
 const rangeSliderInteger = require('..')
 
-async function main () {
-  const opts = {
-    sid: Symbol('range-slider-0'),
-    min: 0,
-    max: 100
-  }
+setTimeout(() => main().catch(console.error), 0)
 
-  const rsi = await rangeSliderInteger(opts)
-  if (typeof document !== 'undefined') {
-    document.body.appendChild(rsi)
-  } else {
-    console.log('Component created in Node environment:', rsi)
-  }
+async function main () {
+  const [sub] = await sdb.watch(onbatch)
+  const rsi = await rangeSliderInteger(sub)
+  document.body.append(rsi)
 }
 
-main().catch(console.error)
+function onbatch (batch) {
+}
+
+function defaults (opts) {
+  const _ = {
+    '..': {
+      0: ''
+    }
+  }
+  return { _ }
+}
