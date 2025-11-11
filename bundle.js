@@ -1,32 +1,35 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (__filename){(function (){
-const STATE = require('STATE')
+const STATE = require('STATE') 
 
-const statedbFile = STATE(__filename)
-const { sdb } = statedbFile(defaults)
+const statedb_file = STATE(__filename)
+
+statedb_file.admin() 
+
+const { sdb, get } = statedb_file(defaults)
 
 const rangeSliderInteger = require('..')
 
 setTimeout(() => main().catch(console.error), 0)
 
 async function main () {
-  const [sub] = await sdb.watch(onbatch)
+  const [sub] = await sdb.watch(onbatch) 
   const rsi = await rangeSliderInteger(sub)
   document.body.append(rsi)
 }
 
 function onbatch (batch) {
+  
 }
 
 function defaults (opts) {
   const _ = {
     '..': {
-      0: ''
+      0: '' 
     }
   }
   return { _ }
 }
-
 }).call(this)}).call(this,"/demo/demo.js")
 },{"..":5,"STATE":2}],2:[function(require,module,exports){
 
