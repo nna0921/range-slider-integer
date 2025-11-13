@@ -26,26 +26,32 @@ const rangeSliderInteger = require('range-slider-integer-anna')
 ### 2.Declare it in defaults()
 Your module’s defaults function must declare it in the _ property:
 ```js
-function defaults() {
-  return {
-    api,
-    _: {
-      'range-slider-integer-anna': { $: '' }
+function defaults () {
+  const _ = {
+    '..': {
+      0: { min: 0, max: 100 }
     }
   }
+  return { _, api }
 }
 ```
 ### 3. Create an instance
 Your parent module’s defaults or api should define an instance:
 ```js
-function defaults(opts) {
-  const _ = {
-    '..': { // '..' is the module that requires rangeSliderInteger
-      0: ''  // This creates instance 0 of '..'
+function defaults () {
+  return {
+    api,
+    _: {
+      'range-slider-anna': { $: '' },
+      'input-integer-ui-anna': { $: '' }
     }
   }
-  return { _ }
-}
+
+  function api (opts = {}) {
+    const { min = 0, max = 100 } = opts
+    return {
+      //rest code
+    }
 ```
 
 ### 4. Watch and append
@@ -53,7 +59,8 @@ function defaults(opts) {
 In your parent module, get the instance sid from sdb.watch() and pass it to the component:
 // In your parent module’s main async function
 ```js
-const [rsiSub] = await sdb.watch(onbatch)
-const rsi = await rangeSliderInteger(rsiSub)
-shadow.append(rsi)
+const { sdb } = await stateDbInstance.get(sid)
+  sdb.watch(onBatch)
+  const rsi = await rangeSliderInteger({ sid })
+  document.body.append(rsi)
 ```
