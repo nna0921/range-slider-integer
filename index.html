@@ -6,19 +6,5 @@
   </head>
   <body>
     <script src="boot.js"></script>
-    <script>
-      function waitForInnerWindow() {
-        const iframe = document.querySelector('iframe');
-        if (iframe && iframe.contentWindow && iframe.contentWindow.STATE) {
-          const innerWin = iframe.contentWindow;
-          const script = innerWin.document.createElement('script');
-          script.src = '../bundle.js';
-          innerWin.document.body.appendChild(script);
-        } else {
-          setTimeout(waitForInnerWindow, 10);
-        }
-      }
-      waitForInnerWindow();
-    </script>
   </body>
 </html>

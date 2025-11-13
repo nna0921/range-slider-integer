@@ -1,35 +1,38 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (__filename){(function (){
-const STATE = require('STATE') 
+const STATE = require('STATE')
+const stateDbFile = STATE(__filename)
 
-const statedb_file = STATE(__filename)
-
-statedb_file.admin() 
-
-const { sdb, get } = statedb_file(defaults)
+stateDbFile.admin()
 
 const rangeSliderInteger = require('..')
 
-setTimeout(() => main().catch(console.error), 0)
+function defaults () {
+  const _ = {
+    '..': {
+      0: { min: 0, max: 100 }
+    }
+  }
+  return { _, api }
+}
+
+function api (opts = {}) {
+  return {}
+}
 
 async function main () {
-  const [sub] = await sdb.watch(onbatch) 
-  const rsi = await rangeSliderInteger(sub)
+  const sid = 'root'
+  const stateDbInstance = stateDbFile(defaults)
+  const { sdb } = await stateDbInstance.get(sid)
+  sdb.watch(onBatch)
+  const rsi = await rangeSliderInteger({ sid })
   document.body.append(rsi)
 }
 
-function onbatch (batch) {
-  
-}
+function onBatch (batch) {}
 
-function defaults (opts) {
-  const _ = {
-    '..': {
-      0: '' 
-    }
-  }
-  return { _ }
-}
+main().catch(console.error)
+
 }).call(this)}).call(this,"/demo/demo.js")
 },{"..":5,"STATE":2}],2:[function(require,module,exports){
 
@@ -276,77 +279,32 @@ function get_theme()
 (function (__filename){(function (){
 const STATE = require('STATE')
 const statedb = STATE(__filename)
-
 const { get } = statedb(defaults)
-
 const range = require('range-slider-anna')
 const integer = require('input-integer-ui-anna')
-
 module.exports = rangeSliderInteger
 
 async function rangeSliderInteger (opts) {
   const { sdb } = await get(opts.sid)
   const { drive } = sdb
-
-  const on = {
-    style: injectStyle,
-    data: ondata
-  }
-
-  const _ = {
-    range: null,
-    integer: null
-  }
-
+  const _ = { range: null, integer: null }
   const el = document.createElement('div')
   const shadow = el.attachShadow({ mode: 'closed' })
   shadow.innerHTML = `
     <div class="rsi">
-      <div class="slider-container">
-        <placeholder-slider></placeholder-slider>
-      </div>
-      <div class="input-container">
-        <placeholder-input></placeholder-input>
-      </div>
+      <div class="slider-container"><placeholder-slider></placeholder-slider></div>
+      <div class="input-container"><placeholder-input></placeholder-input></div>
     </div>
   `
-  
   const configFile = await drive.get('data/config.json')
   const { min, max } = configFile.raw
-
-  await sdb.watch(onbatch)
-  
   const subOpts = { min, max }
-
-  const elRange = range(subOpts, rangeProtocol)
-  const elInteger = integer(subOpts, integerProtocol)
-
+  const elRange = await range(subOpts, rangeProtocol)
+  const elInteger = await integer(subOpts, integerProtocol)
   shadow.querySelector('placeholder-slider').replaceWith(elRange)
   shadow.querySelector('placeholder-input').replaceWith(elInteger)
-
   return el
 
-  async function onbatch (batch) {
-    for (const { type, paths } of batch) {
-      const data = await Promise.all(
-        paths.map(path => drive.get(path).then(file => file.raw))
-      )
-      if (on[type]) on[type](data)
-    }
-  }
-
-  function injectStyle (data) {
-    const sheet = new CSSStyleSheet()
-    sheet.replaceSync(data[0])
-    shadow.adoptedStyleSheets = [sheet]
-  }
-
-  function ondata (data) {
-    const val = data[0].value
-    if (_.range) _.range({ type: 'update', data: val })
-    if (_.integer) _.integer({ type: 'update', data: val })
-  }
-  
   function rangeProtocol (send) {
     _.range = send
     return onSubmoduleUpdate
@@ -366,14 +324,15 @@ async function rangeSliderInteger (opts) {
 
 function defaults () {
   return {
-    api: api,
+    api,
     _: {
       'range-slider-anna': { $: '' },
       'input-integer-ui-anna': { $: '' }
     }
   }
 
-  function api () {
+  function api (opts = {}) {
+    const { min = 0, max = 100 } = opts
     return {
       drive: {
         'style/': {
@@ -393,12 +352,8 @@ function defaults () {
           }
         },
         'data/': {
-          'value.json': {
-            raw: { value: 0 }
-          },
-          'config.json': {
-            raw: { min: 0, max: 100 }
-          }
+          'value.json': { raw: { value: 0 } },
+          'config.json': { raw: { min, max } }
         }
       }
     }
