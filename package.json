@@ -27,9 +27,6 @@
     ],
     "parserOptions": {
       "ecmaVersion": "latest"
-    },
-    "rules": {
-      "camelcase": "off"
     }
   },
   "devDependencies": {
@@ -39,6 +36,7 @@
   },
   "dependencies": {
     "input-integer-ui-anna": "^0.0.7",
-    "range-slider-anna": "^0.0.3"
+    "range-slider-anna": "^0.0.3",
+    "range-slider-integer-anna": "^0.0.2"
   }
 }

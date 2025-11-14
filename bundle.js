@@ -1,40 +1,44 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (__filename){(function (){
 const STATE = require('STATE')
-const stateDbFile = STATE(__filename)
+const statedb = STATE(__filename)
+statedb.admin()
 
-stateDbFile.admin()
+const { sdb } = statedb(defaults)
 
-const rangeSliderInteger = require('..')
-
-function defaults () {
-  const _ = {
-    '..': {
-      0: { min: 0, max: 100 }
-    }
-  }
-  return { _, api }
-}
-
-function api (opts = {}) {
-  return {}
-}
-
-async function main () {
-  const sid = 'root'
-  const stateDbInstance = stateDbFile(defaults)
-  const { sdb } = await stateDbInstance.get(sid)
-  sdb.watch(onBatch)
-  const rsi = await rangeSliderInteger({ sid })
-  document.body.append(rsi)
-}
-
-function onBatch (batch) {}
+const range_slider_integer = require('range-slider-integer-anna')
 
 main().catch(console.error)
 
+async function main () {
+  const subs = await sdb.watch(onbatch)
+  const [{ sid }] = subs
+  if (!sid) throw new Error('No instance SID returned from sdb.watch')
+  const rsi = await range_slider_integer({ sid })
+  document.body.append(rsi)
+}
+
+function onbatch (batch) {
+  console.log('drive batch update:', batch)
+}
+
+function defaults () {
+  const _ = {
+    'range-slider-integer-anna': {
+      0: { min: 0, max: 100 }
+    }
+  }
+
+  return { _, api }
+
+  function api (opts = {}) {
+    return {
+
+    }
+  }
+}
 }).call(this)}).call(this,"/demo/demo.js")
-},{"..":5,"STATE":2}],2:[function(require,module,exports){
+},{"STATE":2,"range-slider-integer-anna":5}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 module.exports = inputInteger
@@ -276,89 +280,63 @@ function get_theme()
 }
 
 },{}],5:[function(require,module,exports){
-(function (__filename){(function (){
-const STATE = require('STATE')
-const statedb = STATE(__filename)
-const { get } = statedb(defaults)
-const range = require('range-slider-anna')
-const integer = require('input-integer-ui-anna')
-module.exports = rangeSliderInteger
+const range =require('range-slider-anna')
+const integer =require('input-integer-ui-anna')
 
-async function rangeSliderInteger (opts) {
-  const { sdb } = await get(opts.sid)
-  const { drive } = sdb
-  const _ = { range: null, integer: null }
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `
-    <div class="rsi">
-      <div class="slider-container"><placeholder-slider></placeholder-slider></div>
-      <div class="input-container"><placeholder-input></placeholder-input></div>
-    </div>
-  `
-  const configFile = await drive.get('data/config.json')
-  const { min, max } = configFile.raw
-  const subOpts = { min, max }
-  const elRange = await range(subOpts, rangeProtocol)
-  const elInteger = await integer(subOpts, integerProtocol)
-  shadow.querySelector('placeholder-slider').replaceWith(elRange)
-  shadow.querySelector('placeholder-input').replaceWith(elInteger)
-  return el
+module.exports =rangeSliderInteger
 
-  function rangeProtocol (send) {
-    _.range = send
-    return onSubmoduleUpdate
-  }
+function rangeSliderInteger (opts)
+{
+    const state = {}
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
 
-  function integerProtocol (send) {
-    _.integer = send
-    return onSubmoduleUpdate
-  }
+    const rsi = document.createElement('div')
+    rsi.classList.add('rsi')
+    
+    const rangeSlider = range(opts, protocol)
+    const inputInteger = integer(opts, protocol)
 
-  function onSubmoduleUpdate (msg) {
-    if (msg.type === 'update') {
-      drive.put('data/value.json', { value: msg.data })
+    rsi.append(rangeSlider, inputInteger)
+
+    const style = document.createElement('style')
+    style.textContent=get_theme()
+
+    
+
+    shadow.append(rsi, style)
+    return el
+    function protocol(message, notify) //notify subcomponent
+    {
+        const {from} = message
+        state[from]={value:0, notify}
+        return listen
     }
-  }
-}
-
-function defaults () {
-  return {
-    api,
-    _: {
-      'range-slider-anna': { $: '' },
-      'input-integer-ui-anna': { $: '' }
-    }
-  }
-
-  function api (opts = {}) {
-    const { min = 0, max = 100 } = opts
-    return {
-      drive: {
-        'style/': {
-          'main.css': {
-            raw: `
-            .rsi {
-              display: grid;
-              grid-template-columns: 8fr 1fr;
-              align-items: center;
-              justify-items: center;
-              padding: 5%;
-              gap: 16px;
-              font-family: sans-serif;
-            }
-            .slider-container, .input-container { width: 100%; }
-            `
-          }
-        },
-        'data/': {
-          'value.json': { raw: { value: 0 } },
-          'config.json': { raw: { min, max } }
+    function listen(message){
+        const {from, type, data} = message 
+        state[from].value=data
+        if (type==='update') {
+            var notify 
+            if(from=== 'range-0') notify=state['input-integer-0'].notify
+            else if (from === 'input-integer-0')  notify=state['range-0'].notify
+            notify({type,data})
         }
-      }
-    }
-  }
-}
 
-}).call(this)}).call(this,"/src/index.js")
-},{"STATE":2,"input-integer-ui-anna":3,"range-slider-anna":4}]},{},[1]);
+    }
+    function get_theme()
+    {
+        return `
+         .rsi{
+          display:grid;
+          grid-template-columns: 8fr 1fr;
+          align-items:center;
+          justify-items:center;
+          padding: 5%;
+
+
+         }
+        `
+    }
+
+}
+},{"input-integer-ui-anna":3,"range-slider-anna":4}]},{},[1]);

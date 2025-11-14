@@ -20,7 +20,7 @@ To use this component inside another **STATE** module:
 
 ### 1. Require the module
 ```js
-const rangeSliderInteger = require('range-slider-integer-anna')
+const rangeSliderInteger = require('..')
 ```
 
 ### 2.Declare it in defaults()

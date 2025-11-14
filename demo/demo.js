@@ -1,32 +1,37 @@
 const STATE = require('STATE')
-const stateDbFile = STATE(__filename)
+const statedb = STATE(__filename)
+statedb.admin()
 
-stateDbFile.admin()
+const { sdb } = statedb(defaults)
 
-const rangeSliderInteger = require('..')
+const range_slider_integer = require('range-slider-integer-anna')
 
-function defaults () {
-  const _ = {
-    '..': {
-      0: { min: 0, max: 100 }
-    }
-  }
-  return { _, api }
-}
-
-function api (opts = {}) {
-  return {}
-}
+main().catch(console.error)
 
 async function main () {
-  const sid = 'root'
-  const stateDbInstance = stateDbFile(defaults)
-  const { sdb } = await stateDbInstance.get(sid)
-  sdb.watch(onBatch)
-  const rsi = await rangeSliderInteger({ sid })
+  const subs = await sdb.watch(onbatch)
+  const [{ sid }] = subs
+  if (!sid) throw new Error('No instance SID returned from sdb.watch')
+  const rsi = await range_slider_integer({ sid })
   document.body.append(rsi)
 }
 
-function onBatch (batch) {}
+function onbatch (batch) {
+  console.log('drive batch update:', batch)
+}
 
-main().catch(console.error)
+function defaults () {
+  const _ = {
+    'range-slider-integer-anna': {
+      0: { min: 0, max: 100 }
+    }
+  }
+
+  return { _, api }
+
+  function api (opts = {}) {
+    return {
+
+    }
+  }
+}
