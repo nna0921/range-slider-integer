@@ -4,7 +4,7 @@ statedb.admin()
 
 const { sdb } = statedb(defaults)
 
-const range_slider_integer = require('range-slider-integer-anna')
+const range_slider_integer = require('..')
 
 main().catch(console.error)
 
@@ -22,7 +22,7 @@ function onbatch (batch) {
 
 function defaults () {
   const _ = {
-    'range-slider-integer-anna': {
+    '..': {
       0: { min: 0, max: 100 }
     }
   }

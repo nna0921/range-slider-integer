@@ -6,7 +6,7 @@ statedb.admin()
 
 const { sdb } = statedb(defaults)
 
-const range_slider_integer = require('range-slider-integer-anna')
+const range_slider_integer = require('..')
 
 main().catch(console.error)
 
@@ -24,7 +24,7 @@ function onbatch (batch) {
 
 function defaults () {
   const _ = {
-    'range-slider-integer-anna': {
+    '..': {
       0: { min: 0, max: 100 }
     }
   }
@@ -37,8 +37,9 @@ function defaults () {
     }
   }
 }
+
 }).call(this)}).call(this,"/demo/demo.js")
-},{"STATE":2,"range-slider-integer-anna":5}],2:[function(require,module,exports){
+},{"..":5,"STATE":2}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 module.exports = inputInteger
@@ -280,63 +281,136 @@ function get_theme()
 }
 
 },{}],5:[function(require,module,exports){
-const range =require('range-slider-anna')
-const integer =require('input-integer-ui-anna')
+(function (__filename){(function (){
+const STATE = require('STATE')
+const statedb = STATE(__filename)
 
-module.exports =rangeSliderInteger
+const { get } = statedb(defaults)
 
-function rangeSliderInteger (opts)
-{
-    const state = {}
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({mode: 'closed'})
+const range = require('range-slider-anna')
+const integer = require('input-integer-ui-anna')
 
-    const rsi = document.createElement('div')
-    rsi.classList.add('rsi')
-    
-    const rangeSlider = range(opts, protocol)
-    const inputInteger = integer(opts, protocol)
+module.exports = range_slider_integer
 
-    rsi.append(rangeSlider, inputInteger)
+async function range_slider_integer (opts) {
+  const { sdb } = await get(opts.sid)
+  const { drive } = sdb
 
-    const style = document.createElement('style')
-    style.textContent=get_theme()
+  const on = {
+    style: inject_style,
+    data: ondata
+  }
 
-    
+  const _ = {
+    range: null,
+    integer: null
+  }
 
-    shadow.append(rsi, style)
-    return el
-    function protocol(message, notify) //notify subcomponent
-    {
-        const {from} = message
-        state[from]={value:0, notify}
-        return listen
+  const el = document.createElement('div')
+  const shadow = el.attachShadow({ mode: 'closed' })
+  shadow.innerHTML = `
+    <div class="rsi">
+      <div class="slider-container">
+        <placeholder-slider></placeholder-slider>
+      </div>
+      <div class="input-container">
+        <placeholder-input></placeholder-input>
+      </div>
+    </div>
+  `
+
+  const subs = await sdb.watch(onbatch)
+
+  const el_range = range(subs[0], range_protocol)
+  const el_integer = integer(subs[1], integer_protocol)
+
+  shadow.querySelector('placeholder-slider').replaceWith(el_range)
+  shadow.querySelector('placeholder-input').replaceWith(el_integer)
+
+  return el
+
+  async function onbatch (batch) {
+    for (const { type, paths } of batch) {
+      const data = await Promise.all(
+        paths.map(path => drive.get(path).then(file => file.raw))
+      )
+      if (on[type]) on[type](data)
     }
-    function listen(message){
-        const {from, type, data} = message 
-        state[from].value=data
-        if (type==='update') {
-            var notify 
-            if(from=== 'range-0') notify=state['input-integer-0'].notify
-            else if (from === 'input-integer-0')  notify=state['range-0'].notify
-            notify({type,data})
-        }
+  }
 
+  function inject_style (data) {
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(data[0])
+    shadow.adoptedStyleSheets = [sheet]
+  }
+
+  function ondata (data) {
+    const val = data[0].value
+    if (_.range) _.range({ type: 'update', data: val })
+    if (_.integer) _.integer({ type: 'update', data: val })
+  }
+
+  function range_protocol (send) {
+    _.range = send
+    return on_submodule_update
+  }
+
+  function integer_protocol (send) {
+    _.integer = send
+    return on_submodule_update
+  }
+
+  function on_submodule_update (msg) {
+    if (msg.type === 'update') {
+      drive.put('data/value.json', { value: msg.data })
     }
-    function get_theme()
-    {
-        return `
-         .rsi{
-          display:grid;
-          grid-template-columns: 8fr 1fr;
-          align-items:center;
-          justify-items:center;
-          padding: 5%;
-
-
-         }
-        `
-    }
-
+  }
 }
-},{"input-integer-ui-anna":3,"range-slider-anna":4}]},{},[1]);
+
+function defaults () {
+  return {
+    api,
+    _: {
+      'range-slider-anna': { $: '' },
+      'input-integer-ui-anna': { $: '' }
+    }
+  }
+
+  function api (opts = {}) {
+    const { min = 0, max = 100 } = opts
+    return {
+      drive: {
+        'style/': {
+          'main.css': {
+            raw: `
+            .rsi {
+              display: grid;
+              grid-template-columns: 8fr 1fr;
+              align-items: center;
+              justify-items: center;
+              padding: 5%;
+              gap: 16px;
+              font-family: sans-serif;
+            }
+            .slider-container, .input-container { width: 100%; }
+            `
+          }
+        },
+        'data/': {
+          'value.json': { raw: { value: 0 } }
+        }
+      },
+      _: {
+        'range-slider-anna': {
+          0: { min, max }
+        },
+        'input-integer-ui-anna': {
+          0: { min, max }
+        }
+      }
+    }
+  }
+}
+
+}).call(this)}).call(this,"/src/index.js")
+},{"STATE":2,"input-integer-ui-anna":3,"range-slider-anna":4}]},{},[1]);

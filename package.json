@@ -35,8 +35,7 @@
     "standardx": "^7.0.0"
   },
   "dependencies": {
-    "input-integer-ui-anna": "^0.0.7",
-    "range-slider-anna": "^0.0.3",
-    "range-slider-integer-anna": "^0.0.2"
+    "input-integer-ui-anna": "^0.0.8",
+    "range-slider-anna": "^0.0.3"
   }
 }
